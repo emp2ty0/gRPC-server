@@ -21,8 +21,9 @@ func main() {
 	cfg := config.MustLoad()
 	log := setupLogger(cfg.Env)
 	log.Info("starting application", slog.String("env", cfg.Env))
+	storagePath := os.Getenv("STORAGE_PATH")
 
-	authRepository := repository_auth.NewAuthRepository()
+	authRepository := repository_auth.NewAuthRepository(storagePath)
 	authService := service_auth.NewAuthService(log, cfg.TokenTTL, authRepository)
 	application := app.NewApp(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL, authService)
 

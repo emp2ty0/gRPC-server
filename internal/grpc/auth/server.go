@@ -2,6 +2,9 @@ package auth_grpc
 
 import (
 	"context"
+	"errors"
+	internal_errors "sso/internal/errors"
+	service_auth "sso/internal/services/auth"
 
 	"github.com/emp2ty0/sso-protos/gen/go/sso"
 	"google.golang.org/grpc"
@@ -43,7 +46,11 @@ func (s *ServerAPI) Login(
 
 	token, err := s.authService.Login(ctx, req.GetEmail(), req.GetPassword(), req.GetAppId())
 	if err != nil {
-		return nil, status.Error(codes.Internal, "internal error ")
+		if errors.Is(err, service_auth.ErrInvalidCredetials) {
+			return nil, status.Error(codes.InvalidArgument, "user not found")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
 	}
 
 	return &sso.LoginResponse{
@@ -61,6 +68,10 @@ func (s *ServerAPI) Register(
 
 	userID, err := s.authService.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
+		if errors.Is(err, internal_errors.ErrUserExists) {
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error ")
 	}
 

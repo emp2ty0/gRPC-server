@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	auth_grpc "sso/internal/grpc/auth"
+	"sso/internal/middleware"
 
 	"google.golang.org/grpc"
 )
@@ -20,7 +21,9 @@ func NewApp(
 	port int,
 	authService auth_grpc.AuthService,
 ) *App {
-	gRPCServer := grpc.NewServer()
+	gRPCServer := grpc.NewServer(
+		grpc.UnaryInterceptor(middleware.LoggingInterceptor(log)),
+	)
 	auth_grpc.Register(gRPCServer, authService)
 
 	return &App{
